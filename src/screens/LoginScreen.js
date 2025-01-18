@@ -126,7 +126,7 @@ export default function LoginScreen({ navigation }) {
         password: regPassword,
         oneTimeCode: regCode,
       });
-      Alert.alert("Success", "Registered! Verify your email and then log in.");
+      Alert.alert("Success", "You can now log in.");
     } catch (err) {
       Alert.alert("Error", err.message);
     }

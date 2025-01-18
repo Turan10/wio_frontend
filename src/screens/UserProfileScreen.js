@@ -7,6 +7,7 @@ import {
   Modal,
   Pressable,
   StyleSheet,
+  ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -380,222 +381,233 @@ export default function UserProfileScreen({ navigation }) {
           userId={userId}
         />
 
-        <Formik
-          initialValues={initialValues}
-          validationSchema={ProfileSchema}
-          onSubmit={handleSave}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingBottom: spacing.xl,
+            paddingHorizontal: spacing.lg,
+          }}
+          showsVerticalScrollIndicator={false}
         >
-          {({
-            handleChange,
-            handleBlur,
-            handleSubmit,
-            values,
-            errors,
-            touched,
-          }) => (
-            <>
-              <AvatarSection>
-                <AvatarContainer>
-                  {avatar ? (
-                    <Avatar.Image size={120} source={{ uri: avatar }} />
-                  ) : (
-                    <Avatar.Icon
-                      size={120}
-                      icon="account"
-                      backgroundColor={theme.colors.border}
-                    />
-                  )}
-                  {editing && (
-                    <EditAvatarButton onPress={handleImagePick}>
-                      <MaterialIcons
-                        name="camera-alt"
-                        size={20}
-                        color={theme.colors.light}
+          <Formik
+            initialValues={initialValues}
+            validationSchema={ProfileSchema}
+            onSubmit={handleSave}
+          >
+            {({
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+            }) => (
+              <>
+                <AvatarSection>
+                  <AvatarContainer>
+                    {avatar ? (
+                      <Avatar.Image size={120} source={{ uri: avatar }} />
+                    ) : (
+                      <Avatar.Icon
+                        size={120}
+                        icon="account"
+                        backgroundColor={theme.colors.border}
                       />
-                    </EditAvatarButton>
+                    )}
+                    {editing && (
+                      <EditAvatarButton onPress={handleImagePick}>
+                        <MaterialIcons
+                          name="camera-alt"
+                          size={20}
+                          color={theme.colors.light}
+                        />
+                      </EditAvatarButton>
+                    )}
+                  </AvatarContainer>
+                </AvatarSection>
+
+                <ProfileCard>
+                  <SectionTitle>Personal Information</SectionTitle>
+
+                  {editing ? (
+                    <>
+                      <FieldLabel>Name</FieldLabel>
+                      <StyledInput
+                        onChangeText={handleChange("name")}
+                        onBlur={handleBlur("name")}
+                        value={values.name}
+                        placeholder="Your Name"
+                        placeholderTextColor={theme.colors.placeholder}
+                      />
+                      {touched.name && errors.name && (
+                        <Text style={{ color: theme.colors.error }}>
+                          {errors.name}
+                        </Text>
+                      )}
+
+                      <FieldLabel>Email</FieldLabel>
+                      <StyledInput
+                        onChangeText={handleChange("email")}
+                        onBlur={handleBlur("email")}
+                        value={values.email}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        placeholder="Your Email"
+                        placeholderTextColor={theme.colors.placeholder}
+                      />
+                      {touched.email && errors.email && (
+                        <Text style={{ color: theme.colors.error }}>
+                          {errors.email}
+                        </Text>
+                      )}
+
+                      <FieldLabel>Title</FieldLabel>
+                      <StyledInput
+                        onChangeText={handleChange("title")}
+                        onBlur={handleBlur("title")}
+                        value={values.title}
+                        placeholder="Your Title"
+                        placeholderTextColor={theme.colors.placeholder}
+                      />
+                      {touched.title && errors.title && (
+                        <Text style={{ color: theme.colors.error }}>
+                          {errors.title}
+                        </Text>
+                      )}
+
+                      <FieldLabel>Department</FieldLabel>
+                      <StyledInput
+                        onChangeText={handleChange("department")}
+                        onBlur={handleBlur("department")}
+                        value={values.department}
+                        placeholder="Your Department"
+                        placeholderTextColor={theme.colors.placeholder}
+                      />
+                      {touched.department && errors.department && (
+                        <Text style={{ color: theme.colors.error }}>
+                          {errors.department}
+                        </Text>
+                      )}
+
+                      <FieldLabel>Phone</FieldLabel>
+                      <StyledInput
+                        onChangeText={handleChange("phone")}
+                        onBlur={handleBlur("phone")}
+                        value={values.phone}
+                        keyboardType="phone-pad"
+                        placeholder="Your Phone"
+                        placeholderTextColor={theme.colors.placeholder}
+                      />
+                      {touched.phone && errors.phone && (
+                        <Text style={{ color: theme.colors.error }}>
+                          {errors.phone}
+                        </Text>
+                      )}
+
+                      <FieldLabel>Company</FieldLabel>
+                      <StyledInput
+                        value={values.company}
+                        editable={false}
+                        style={{
+                          backgroundColor: theme.colors.background,
+                          color: theme.colors.textSecondary,
+                        }}
+                      />
+
+                      <ButtonRow>
+                        <CancelButton onPress={handleCancel}>
+                          <CancelButtonText>Cancel</CancelButtonText>
+                        </CancelButton>
+                        <EditButton onPress={handleSubmit}>
+                          <SaveButtonText>Save</SaveButtonText>
+                        </EditButton>
+                      </ButtonRow>
+                    </>
+                  ) : (
+                    <>
+                      <FieldLabel>Name</FieldLabel>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: theme.colors.textSecondary,
+                          marginBottom: spacing.md,
+                        }}
+                      >
+                        {values.name}
+                      </Text>
+
+                      <FieldLabel>Email</FieldLabel>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: theme.colors.textSecondary,
+                          marginBottom: spacing.md,
+                        }}
+                      >
+                        {values.email}
+                      </Text>
+
+                      <FieldLabel>Title</FieldLabel>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: theme.colors.textSecondary,
+                          marginBottom: spacing.md,
+                        }}
+                      >
+                        {values.title}
+                      </Text>
+
+                      <FieldLabel>Department</FieldLabel>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: theme.colors.textSecondary,
+                          marginBottom: spacing.md,
+                        }}
+                      >
+                        {values.department}
+                      </Text>
+
+                      <FieldLabel>Phone</FieldLabel>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: theme.colors.textSecondary,
+                          marginBottom: spacing.md,
+                        }}
+                      >
+                        {values.phone}
+                      </Text>
+
+                      <FieldLabel>Company</FieldLabel>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: theme.colors.textSecondary,
+                          marginBottom: spacing.md,
+                        }}
+                      >
+                        {values.company}
+                      </Text>
+
+                      <ButtonRow>
+                        <CancelButton
+                          onPress={() => setShowPasswordModal(true)}
+                        >
+                          <CancelButtonText>Change Password</CancelButtonText>
+                        </CancelButton>
+                        <EditButton onPress={handleEdit}>
+                          <SaveButtonText>Edit Profile</SaveButtonText>
+                        </EditButton>
+                      </ButtonRow>
+                    </>
                   )}
-                </AvatarContainer>
-              </AvatarSection>
-
-              <ProfileCard>
-                <SectionTitle>Personal Information</SectionTitle>
-
-                {editing ? (
-                  <>
-                    <FieldLabel>Name</FieldLabel>
-                    <StyledInput
-                      onChangeText={handleChange("name")}
-                      onBlur={handleBlur("name")}
-                      value={values.name}
-                      placeholder="Your Name"
-                      placeholderTextColor={theme.colors.placeholder}
-                    />
-                    {touched.name && errors.name && (
-                      <Text style={{ color: theme.colors.error }}>
-                        {errors.name}
-                      </Text>
-                    )}
-
-                    <FieldLabel>Email</FieldLabel>
-                    <StyledInput
-                      onChangeText={handleChange("email")}
-                      onBlur={handleBlur("email")}
-                      value={values.email}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      placeholder="Your Email"
-                      placeholderTextColor={theme.colors.placeholder}
-                    />
-                    {touched.email && errors.email && (
-                      <Text style={{ color: theme.colors.error }}>
-                        {errors.email}
-                      </Text>
-                    )}
-
-                    <FieldLabel>Title</FieldLabel>
-                    <StyledInput
-                      onChangeText={handleChange("title")}
-                      onBlur={handleBlur("title")}
-                      value={values.title}
-                      placeholder="Your Title"
-                      placeholderTextColor={theme.colors.placeholder}
-                    />
-                    {touched.title && errors.title && (
-                      <Text style={{ color: theme.colors.error }}>
-                        {errors.title}
-                      </Text>
-                    )}
-
-                    <FieldLabel>Department</FieldLabel>
-                    <StyledInput
-                      onChangeText={handleChange("department")}
-                      onBlur={handleBlur("department")}
-                      value={values.department}
-                      placeholder="Your Department"
-                      placeholderTextColor={theme.colors.placeholder}
-                    />
-                    {touched.department && errors.department && (
-                      <Text style={{ color: theme.colors.error }}>
-                        {errors.department}
-                      </Text>
-                    )}
-
-                    <FieldLabel>Phone</FieldLabel>
-                    <StyledInput
-                      onChangeText={handleChange("phone")}
-                      onBlur={handleBlur("phone")}
-                      value={values.phone}
-                      keyboardType="phone-pad"
-                      placeholder="Your Phone"
-                      placeholderTextColor={theme.colors.placeholder}
-                    />
-                    {touched.phone && errors.phone && (
-                      <Text style={{ color: theme.colors.error }}>
-                        {errors.phone}
-                      </Text>
-                    )}
-
-                    <FieldLabel>Company</FieldLabel>
-                    <StyledInput
-                      value={values.company}
-                      editable={false}
-                      style={{
-                        backgroundColor: theme.colors.background,
-                        color: theme.colors.textSecondary,
-                      }}
-                    />
-
-                    <ButtonRow>
-                      <CancelButton onPress={handleCancel}>
-                        <CancelButtonText>Cancel</CancelButtonText>
-                      </CancelButton>
-                      <EditButton onPress={handleSubmit}>
-                        <SaveButtonText>Save</SaveButtonText>
-                      </EditButton>
-                    </ButtonRow>
-                  </>
-                ) : (
-                  <>
-                    <FieldLabel>Name</FieldLabel>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        color: theme.colors.textSecondary,
-                        marginBottom: spacing.md,
-                      }}
-                    >
-                      {values.name}
-                    </Text>
-
-                    <FieldLabel>Email</FieldLabel>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        color: theme.colors.textSecondary,
-                        marginBottom: spacing.md,
-                      }}
-                    >
-                      {values.email}
-                    </Text>
-
-                    <FieldLabel>Title</FieldLabel>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        color: theme.colors.textSecondary,
-                        marginBottom: spacing.md,
-                      }}
-                    >
-                      {values.title}
-                    </Text>
-
-                    <FieldLabel>Department</FieldLabel>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        color: theme.colors.textSecondary,
-                        marginBottom: spacing.md,
-                      }}
-                    >
-                      {values.department}
-                    </Text>
-
-                    <FieldLabel>Phone</FieldLabel>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        color: theme.colors.textSecondary,
-                        marginBottom: spacing.md,
-                      }}
-                    >
-                      {values.phone}
-                    </Text>
-
-                    <FieldLabel>Company</FieldLabel>
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        color: theme.colors.textSecondary,
-                        marginBottom: spacing.md,
-                      }}
-                    >
-                      {values.company}
-                    </Text>
-
-                    <ButtonRow>
-                      <CancelButton onPress={() => setShowPasswordModal(true)}>
-                        <CancelButtonText>Change Password</CancelButtonText>
-                      </CancelButton>
-                      <EditButton onPress={handleEdit}>
-                        <SaveButtonText>Edit Profile</SaveButtonText>
-                      </EditButton>
-                    </ButtonRow>
-                  </>
-                )}
-              </ProfileCard>
-            </>
-          )}
-        </Formik>
+                </ProfileCard>
+              </>
+            )}
+          </Formik>
+        </ScrollView>
       </Container>
     </GestureHandlerRootView>
   );

@@ -490,6 +490,8 @@ export default function BookingScreen({ navigation, route }) {
           )}
         </BookButton>
       )}
+
+      {/* KALENDER-MODAL */}
       <Modal
         visible={showCalendar}
         transparent
@@ -512,6 +514,10 @@ export default function BookingScreen({ navigation, route }) {
                   .toISOString()
                   .split("T")[0]
               }
+              // Forhindrer scrolling til måneder før nuværende
+              pastScrollRange={0}
+              // Deaktiverer tryk på "forbudte" datoer (for eksempel i går)
+              disableAllTouchEventsForDisabledDays={true}
               theme={{
                 backgroundColor: theme.colors.surface,
                 calendarBackground: theme.colors.surface,
@@ -536,6 +542,7 @@ export default function BookingScreen({ navigation, route }) {
           </CalendarContainer>
         </ModalContainer>
       </Modal>
+
       <SuccessModal
         visible={showSuccessModal}
         onClose={() => {

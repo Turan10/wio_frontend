@@ -3,7 +3,7 @@ import { Alert } from "react-native";
 import { useTheme } from "styled-components/native";
 import styled from "styled-components/native";
 import { useRoute, useNavigation } from "@react-navigation/native";
-import { apiPost, BACKEND_URL } from "../utils/api"; // <-- import here
+import { apiPost, BACKEND_URL } from "../utils/api";
 
 const Container = styled.View`
   flex: 1;

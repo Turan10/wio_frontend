@@ -30,7 +30,12 @@ const Container = styled.View`
   background-color: ${({ theme }) => theme.colors.background};
 `;
 
-const Content = styled.ScrollView`
+const Content = styled.ScrollView.attrs(({ theme }) => ({
+  contentContainerStyle: {
+    paddingBottom: 120,
+    paddingRight: 72, // <--- ADDED PADDING TO AVOID OVERLAP WITH FAB
+  },
+}))`
   padding: ${({ theme }) => theme.spacing.lg}px;
 `;
 
@@ -90,7 +95,6 @@ export default function AdminDashboard({ navigation }) {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
   const companyId = currentUser?.companyId;
-
   const [isFABOpen, setIsFABOpen] = useState(false);
 
   const {
@@ -205,6 +209,7 @@ export default function AdminDashboard({ navigation }) {
       dispatch(logout());
       navigation.reset({ index: 0, routes: [{ name: "Login" }] });
     } catch (err) {
+      // In case of error, still force logout locally
       dispatch(logout());
       navigation.reset({ index: 0, routes: [{ name: "Login" }] });
     }
@@ -319,21 +324,19 @@ export default function AdminDashboard({ navigation }) {
                     title="Total Employees"
                     value={`${totalEmployees}`}
                     trend="+5%"
-                    timeframeLabel="(Week over Week)"
+                    timeframeLabel="(Weekly)"
                     icon="account-multiple"
                     trendUp
                   />
                   <StatCard
                     title="Active Floors"
                     value={`${activeFloors}`}
-                    trend="+2%"
-                    timeframeLabel="(Monthly)"
+                    trend="+100%"
                     icon="office-building"
                     trendUp
                   />
                 </ScrollView>
               </StatsSection>
-
               <View style={{ marginBottom: theme.spacing.xl }}>
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Floor Plans</Text>
@@ -398,7 +401,6 @@ export default function AdminDashboard({ navigation }) {
                   </Pressable>
                 ))}
               </View>
-
               <EmployeeSection>
                 <Text style={styles.sectionTitle}>Employees</Text>
                 {usersLoading ? (

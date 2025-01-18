@@ -1,6 +1,6 @@
 import { getAuthToken as getToken, storeAuthToken as storeToken } from "./auth";
 
-export const BACKEND_URL = "http://192.168.86.23:8080";
+export const BACKEND_URL = "http://192.168.86.22:8080";
 
 export async function apiGet(url) {
   const token = await getToken();
