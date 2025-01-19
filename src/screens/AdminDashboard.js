@@ -33,7 +33,7 @@ const Container = styled.View`
 const Content = styled.ScrollView.attrs(({ theme }) => ({
   contentContainerStyle: {
     paddingBottom: 120,
-    paddingRight: 72, // <--- ADDED PADDING TO AVOID OVERLAP WITH FAB
+    paddingRight: 72, 
   },
 }))`
   padding: ${({ theme }) => theme.spacing.lg}px;
