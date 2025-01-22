@@ -25,6 +25,10 @@ import StatCard from "../components/StatCard";
 import PlatformLayout from "../components/PlatformLayout";
 import EmptyState from "../components/EmptyState";
 
+function getTodayDateString() {
+  return new Date().toISOString().split("T")[0];
+}
+
 const Container = styled.View`
   flex: 1;
   background-color: ${({ theme }) => theme.colors.background};
@@ -33,7 +37,7 @@ const Container = styled.View`
 const Content = styled.ScrollView.attrs(({ theme }) => ({
   contentContainerStyle: {
     paddingBottom: 120,
-    paddingRight: 72, 
+    paddingRight: 72,
   },
 }))`
   padding: ${({ theme }) => theme.spacing.lg}px;
@@ -119,6 +123,35 @@ export default function AdminDashboard({ navigation }) {
     enabled: !!companyId,
   });
 
+  // For each floor, we fetch occupant info for "today" to count seats
+  const {
+    data: floorBookings = {},
+    refetch: refetchFloorBookings,
+    isLoading: floorBookingsLoading,
+  } = useQuery({
+    queryKey: ["floorSeatBookings", companyId],
+    enabled: !!companyId && floorsData.length > 0,
+    queryFn: async () => {
+      const today = getTodayDateString();
+      const results = {};
+      for (const fl of floorsData) {
+        try {
+          const seatsInfo = await apiGet(
+            `${BACKEND_URL}/api/seats/floor/${fl.id}?date=${today}`
+          );
+          const bookedCount = seatsInfo.filter((s) => s.booked).length;
+          results[fl.id] = {
+            booked: bookedCount,
+            total: seatsInfo.length,
+          };
+        } catch {
+          results[fl.id] = { booked: 0, total: 0 };
+        }
+      }
+      return results;
+    },
+  });
+
   const totalEmployees = users.length;
   const activeFloors = floorsData.length;
 
@@ -126,6 +159,7 @@ export default function AdminDashboard({ navigation }) {
     if (companyId) {
       await refetchUsers();
       await refetchFloors();
+      await refetchFloorBookings();
     }
   };
 
@@ -198,18 +232,10 @@ export default function AdminDashboard({ navigation }) {
           errorMsg = errText || errorMsg;
         }
         throw new Error(errorMsg);
-      } else {
-        const contentType = res.headers.get("content-type") || "";
-        if (contentType.includes("application/json")) {
-          await res.json().catch(() => {});
-        } else {
-          await res.text().catch(() => {});
-        }
       }
       dispatch(logout());
       navigation.reset({ index: 0, routes: [{ name: "Login" }] });
     } catch (err) {
-      // In case of error, still force logout locally
       dispatch(logout());
       navigation.reset({ index: 0, routes: [{ name: "Login" }] });
     }
@@ -302,7 +328,9 @@ export default function AdminDashboard({ navigation }) {
             <Content
               refreshControl={
                 <RefreshControl
-                  refreshing={floorsLoading || usersLoading}
+                  refreshing={
+                    floorsLoading || usersLoading || floorBookingsLoading
+                  }
                   onRefresh={onRefresh}
                   tintColor={theme.colors.primary}
                   colors={[theme.colors.primary]}
@@ -337,70 +365,84 @@ export default function AdminDashboard({ navigation }) {
                   />
                 </ScrollView>
               </StatsSection>
+
               <View style={{ marginBottom: theme.spacing.xl }}>
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Floor Plans</Text>
                 </View>
-                {floorsData.map((floor) => (
-                  <Pressable
-                    key={floor.id}
-                    onPress={async () => {
-                      await handleHaptic();
-                      navigation.navigate("FloorPlanEditor", {
-                        floorId: floor.id,
-                        isNew: false,
-                      });
-                    }}
-                    style={({ pressed }) => [
-                      {
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: theme.spacing.lg,
-                        backgroundColor: theme.colors.light,
-                        borderRadius: theme.spacing.md,
-                        marginBottom: theme.spacing.md,
-                        opacity: pressed ? 0.8 : 1,
-                      },
-                      styles.shadow2,
-                    ]}
-                  >
-                    <View
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 24,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginRight: 10,
-                        backgroundColor: `${theme.colors.primary}10`,
+
+                {floorsData.map((floor) => {
+                  const bData = floorBookings[floor.id] || {
+                    booked: 0,
+                    total: 0,
+                  };
+                  const seatsString = `${bData.booked}/${bData.total} seats booked`;
+
+                  return (
+                    <Pressable
+                      key={floor.id}
+                      onPress={async () => {
+                        await handleHaptic();
+                        navigation.navigate("FloorPlanEditor", {
+                          floorId: floor.id,
+                          isNew: false,
+                        });
                       }}
+                      style={({ pressed }) => [
+                        {
+                          flexDirection: "row",
+                          alignItems: "center",
+                          padding: theme.spacing.lg,
+                          backgroundColor: theme.colors.light,
+                          borderRadius: theme.spacing.md,
+                          marginBottom: theme.spacing.md,
+                          opacity: pressed ? 0.8 : 1,
+                        },
+                        styles.shadow2,
+                      ]}
                     >
-                      <MaterialCommunityIcons
-                        name="office-building"
-                        size={24}
-                        color={theme.colors.primary}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
+                      <View
                         style={{
-                          fontSize: 16,
-                          fontWeight: "600",
-                          color: theme.colors.textPrimary,
-                          marginBottom: theme.spacing.xs,
+                          width: 48,
+                          height: 48,
+                          borderRadius: 24,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginRight: 10,
+                          backgroundColor: `${theme.colors.primary}10`,
                         }}
                       >
-                        {floor.name}
-                      </Text>
-                    </View>
-                    <MaterialCommunityIcons
-                      name="chevron-right"
-                      size={24}
-                      color={theme.colors.textSecondary}
-                    />
-                  </Pressable>
-                ))}
+                        <MaterialCommunityIcons
+                          name="office-building"
+                          size={24}
+                          color={theme.colors.primary}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={{
+                            fontSize: 16,
+                            fontWeight: "600",
+                            color: theme.colors.textPrimary,
+                            marginBottom: theme.spacing.xs,
+                          }}
+                        >
+                          {floor.name}
+                        </Text>
+                        <Text style={{ color: theme.colors.textSecondary }}>
+                          {seatsString}
+                        </Text>
+                      </View>
+                      <MaterialCommunityIcons
+                        name="chevron-right"
+                        size={24}
+                        color={theme.colors.textSecondary}
+                      />
+                    </Pressable>
+                  );
+                })}
               </View>
+
               <EmployeeSection>
                 <Text style={styles.sectionTitle}>Employees</Text>
                 {usersLoading ? (

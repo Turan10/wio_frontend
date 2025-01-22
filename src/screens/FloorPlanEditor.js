@@ -528,6 +528,7 @@ export default function FloorPlanEditor({ navigation, route }) {
         <TopBar style={{ paddingTop: insets.top }}>
           <Menu
             visible={floorMenuVisible}
+            style={{ marginTop: -75 }}
             onDismiss={() => setFloorMenuVisible(false)}
             anchor={
               <FloorSelector onPress={() => setFloorMenuVisible(true)}>

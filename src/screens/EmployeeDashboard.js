@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState, useMemo } from "react";
+import React, { useRef, useCallback, useState, useMemo } from "react";
 import {
   Animated,
   RefreshControl,
@@ -28,6 +28,12 @@ import { PlatformUtils, useLayoutConfig } from "../utils/platformConfig";
 import { apiGet, BACKEND_URL, getAuthToken } from "../utils/api";
 import { logout } from "../store/slices/userSlice";
 import BookingCard from "../components/BookingCard";
+import EmptyState from "../components/EmptyState";
+import { ActivityIndicator } from "react-native";
+
+function getTodayDateString() {
+  return new Date().toISOString().split("T")[0];
+}
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -285,6 +291,31 @@ function FloorSelector({ floors, selectedFloor, onSelect }) {
   const [isVisible, setIsVisible] = useState(false);
   const theme = useTheme();
 
+  const {
+    data: seatDataPerFloor = {},
+    isLoading: seatDataLoading,
+    isError: seatDataError,
+  } = useQuery({
+    queryKey: ["employeeFloorSelectorSeatData", floors.map((f) => f.id)],
+    enabled: floors.length > 0,
+    queryFn: async () => {
+      const today = getTodayDateString();
+      const result = {};
+      for (const f of floors) {
+        try {
+          const seatsInfo = await apiGet(
+            `${BACKEND_URL}/api/seats/floor/${f.id}?date=${today}`
+          );
+          const bookedCount = seatsInfo.filter((s) => s.booked).length;
+          result[f.id] = { booked: bookedCount, total: seatsInfo.length };
+        } catch {
+          result[f.id] = { booked: 0, total: 0 };
+        }
+      }
+      return result;
+    },
+  });
+
   const handleSelect = (floor) => {
     onSelect(floor);
     setIsVisible(false);
@@ -301,9 +332,7 @@ function FloorSelector({ floors, selectedFloor, onSelect }) {
         style={styles.floorSelectorContainer}
       >
         <LinearGradient
-          colors={[theme.colors.primary, theme.colors.darkAccent || "#555555"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+          colors={[theme.colors.primary, theme.colors.primary]}
           style={styles.gradientBorder}
         >
           <View style={styles.floorContent}>
@@ -344,50 +373,66 @@ function FloorSelector({ floors, selectedFloor, onSelect }) {
         <View style={styles.modalContent}>
           <View style={styles.modalIndicator} />
           <Text style={styles.modalTitle}>Select Floor</Text>
+
           <ScrollView style={styles.floorList}>
-            {floors.map((floor) => (
-              <ListItem
-                key={floor.id}
-                onPress={() => handleSelect(floor)}
-                containerStyle={[
-                  styles.floorItem,
-                  selectedFloor?.id === floor.id && styles.selectedFloorItem,
-                ]}
-                Component={Pressable}
-                android_ripple={{ color: `${theme.colors.primary}30` }}
-              >
-                <ListItem.Content>
-                  <ListItem.Title
-                    style={[
-                      styles.floorItemTitle,
-                      {
-                        color:
-                          selectedFloor?.id === floor.id
-                            ? theme.colors.primary
-                            : "#333",
-                        fontWeight:
-                          selectedFloor?.id === floor.id ? "600" : "400",
-                      },
+            {seatDataLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color={theme.colors.primary} />
+                <Text style={styles.loadingText}>Loading seat data...</Text>
+              </View>
+            ) : seatDataError ? (
+              <Text style={styles.errorText}>Error loading seat data.</Text>
+            ) : floors.length === 0 ? (
+              <Text style={styles.noFloorsText}>No floors found.</Text>
+            ) : (
+              floors.map((floor) => {
+                const seatStats = seatDataPerFloor[floor.id] || {
+                  booked: 0,
+                  total: 0,
+                };
+                const seatsString = `${seatStats.booked}/${seatStats.total} seats booked`;
+
+                const isSelected = selectedFloor?.id === floor.id;
+                return (
+                  <ListItem
+                    key={floor.id}
+                    onPress={() => handleSelect(floor)}
+                    containerStyle={[
+                      styles.floorItem,
+                      isSelected && styles.selectedFloorItem,
                     ]}
+                    Component={Pressable}
+                    android_ripple={{ color: `${theme.colors.primary}30` }}
                   >
-                    {floor.name}
-                  </ListItem.Title>
-                  {floor.description && (
-                    <ListItem.Subtitle style={styles.floorItemSubtitle}>
-                      {floor.description}
-                    </ListItem.Subtitle>
-                  )}
-                </ListItem.Content>
-                {selectedFloor?.id === floor.id && (
-                  <MaterialCommunityIcons
-                    name="check"
-                    size={24}
-                    color={theme.colors.primary}
-                  />
-                )}
-              </ListItem>
-            ))}
+                    <ListItem.Content>
+                      <ListItem.Title
+                        style={[
+                          styles.floorItemTitle,
+                          {
+                            color: isSelected ? theme.colors.primary : "#333",
+                            fontWeight: isSelected ? "600" : "400",
+                          },
+                        ]}
+                      >
+                        {floor.name}
+                      </ListItem.Title>
+                      <ListItem.Subtitle style={styles.floorItemSubtitle}>
+                        {seatsString}
+                      </ListItem.Subtitle>
+                    </ListItem.Content>
+                    {isSelected && (
+                      <MaterialCommunityIcons
+                        name="check"
+                        size={24}
+                        color={theme.colors.primary}
+                      />
+                    )}
+                  </ListItem>
+                );
+              })
+            )}
           </ScrollView>
+
           <Pressable
             onPress={() => setIsVisible(false)}
             style={styles.doneButton}
@@ -552,7 +597,7 @@ export default function EmployeeDashboard({ navigation }) {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       await refetch();
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {}
   }, [refetch]);
 
@@ -732,7 +777,7 @@ export default function EmployeeDashboard({ navigation }) {
             <Content
               refreshControl={
                 <RefreshControl
-                  refreshing={isLoading}
+                  refreshing={isLoading || floorsLoading}
                   onRefresh={onRefresh}
                   tintColor={theme.colors.primary}
                   colors={[theme.colors.primary]}
@@ -748,14 +793,12 @@ export default function EmployeeDashboard({ navigation }) {
               removeClippedSubviews
               overScrollMode="never"
             >
-              {/* Floor Selector */}
               <FloorSelector
                 floors={floorsData}
                 selectedFloor={selectedFloor}
                 onSelect={setSelectedFloor}
               />
 
-              {/* Quick Book Card */}
               <QuickBookCard
                 onPress={() => {
                   if (!selectedFloor) {
