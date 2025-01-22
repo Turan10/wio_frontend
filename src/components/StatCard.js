@@ -44,14 +44,7 @@ const TrendText = styled.Text`
   margin-left: 4px;
 `;
 
-/**
- * @param {string} title
- * @param {string|number} value
- * @param {string} trend
- * @param {string} timeframeLabel
- * @param {boolean} trendUp
- * @param {string} icon
- */
+
 export default function StatCard({
   title,
   value = 0,
